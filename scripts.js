@@ -130,8 +130,25 @@ function drawArrow(start, end, type){
 
 
 const boardSize = 10
-const ladders = { 4: 14, 9: 31, 20: 38, 28: 84, 40: 59, 63: 81, 71: 91 };
-const snakes = { 17: 7, 54: 34, 62: 19, 64: 60, 87: 24, 93: 73, 95: 75, 99: 78 };
+const ladders = { 
+    4: 14,
+    9: 31,
+    20: 38, 
+    28: 84, 
+    40: 59, 
+    63: 81, 
+    71: 91 
+};
+const snakes = { 
+    17: 7, 
+    54: 34, 
+    62: 19, 
+    64: 60, 
+    87: 24, 
+    93: 73, 
+    95: 75, 
+    99: 78
+ };
 // const randomColors = ['#ff6347', '#ffd700', '#7fffd4', '#9370db', '#00ced1'];
 // const sequentialColors = ['#ff6347', '#ffd700', '#7fffd4', '#9370db', '#00ced1'];
 const sequentialColors = [
@@ -148,9 +165,16 @@ let colorIndex = 0
 const gameBoard = document.getElementById('game-board');
 
 for(let row = 10; row > 0; row--){
+    let rowCells = []
     for(let col = 1; col <= 10; col++){
         const cell = document.createElement('div');
-        const cellNumber = (row - 1) * 10 + col;
+
+        if (row % 2 === 0)
+            cellNumber = (row - 1) * 10 + col
+        else
+            cellNumber = row * 10 - col + 1
+
+        // const cellNumber = (row - 1) * 10 + col;
         cell.id = 'cell-' + cellNumber;
         cell.textContent = cellNumber;
 
@@ -161,16 +185,47 @@ for(let row = 10; row > 0; row--){
         // Check if cell is the start of a ladder or head of a snake
         if (ladders[cellNumber]) {
             cell.classList.add('ladder-start');
-            drawArrow(cell, 'up')
-        }
-        if (snakes[cellNumber]) {
-            cell.classList.add('snake-head');
-            drawArrow(cell, 'down')
+            drawArrow(cell, 'up', ladders[cellNumber], 'green')
         }
 
-        gameBoard.appendChild(cell);
+        if (snakes[cellNumber]) {
+            cell.classList.add('snake-head');
+            drawArrow(cell, 'down', snakes[cellNumber], 'red')
+        }
+
+        rowCells.push(cell)
+
+        // gameBoard.appendChild(cell);
     }
+
+    rowCells.reverse().forEach(cell => gameBoard.appendChild(cell))
 }
+
+// for(let row = 10; row > 0; row--){
+//     for(let col = 1; col <= 10; col++){
+//         const cell = document.createElement('div');
+//         const cellNumber = (row - 1) * 10 + col;
+//         cell.id = 'cell-' + cellNumber;
+//         cell.textContent = cellNumber;
+
+//         // Calculate color index based on row and column offset
+//         const colorIndex = (row + col - 1) % sequentialColors.length;
+//         cell.style.backgroundColor = sequentialColors[colorIndex];
+
+//         // Check if cell is the start of a ladder or head of a snake
+//         if (ladders[cellNumber]) {
+//             cell.classList.add('ladder-start');
+//             drawArrow(cell, 'up', ladders[cellNumber], 'green')
+//         }
+
+//         if (snakes[cellNumber]) {
+//             cell.classList.add('snake-head');
+//             drawArrow(cell, 'down', snakes[cellNumber], 'red')
+//         }
+
+//         gameBoard.appendChild(cell);
+//     }
+// }
 
 // for(let i = 100; i > 0; i--){
 //     const cell = document.createElement('div')
@@ -315,10 +370,37 @@ function animateMove(playerPiece, oldCell, newCell, start, end){
     }
 }
 
-function drawArrow(cell, direction){
+// function drawArrow(cell, direction){
+//     const arrow = document.createElement('div')
+//     arrow.classList.add('arrow', direction);
+//     cell.appendChild(arrow)
+// }
+
+
+function drawArrow(cell, direction, endcellNumber, color){
+    // console.log("Drawing arrow : start : " + cell.innerText  + " direction : " + direction + " End cell Number " + endcellNumber +  " color : " + color);
+    alert("Drawing arrow : start : " + cell.innerText  + " direction : " + direction + " End cell Number " + endcellNumber +  " color : " + color)
+    const startCellRect = cell.getBoundingClientRect();
+    const endCell = document.getElementById('cell-' + endcellNumber)
+
+    if(!endCell){
+        console.error(`End cell ${endcellNumber} does not exists`);
+        return
+    } 
+
+    const endCellRect = endCell.getBoundingClientRect();
+
+    const deltaX = endCellRect.left - startCellRect.left;
+    const deltaY = endCellRect.top - startCellRect.top;
+
+    const length = Math.sqrt(deltaX * deltaX + deltaY * deltaY)
+    const angle = Math.atan2(deltaY, deltaX) * 180 / Math.PI;
+
     const arrow = document.createElement('div')
-    arrow.classList.add('arrow', direction);
+    arrow.classList.add('arrow', direction)
+    arrow.style.width = length + 'px';
+    arrow.style.transform = `rotate(${angle}deg)`;
+    arrow.style.borderColor = color
+
     cell.appendChild(arrow)
 }
-
-
