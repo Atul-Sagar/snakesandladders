@@ -129,7 +129,7 @@ function drawArrow(start, end, type){
 }*/
 
 
-const boardSize = 10
+/*const boardSize = 10
 const ladders = { 
     4: 14,
     9: 31,
@@ -403,4 +403,171 @@ function drawArrow(cell, direction, endcellNumber, color){
     arrow.style.borderColor = color
 
     cell.appendChild(arrow)
-}
+}*/
+
+
+/**
+ * code with error handling
+ */
+
+document.addEventListener('DOMContentLoaded', function (){
+    const boardSize = 10;
+    const ladders = { 4: 14, 9: 31, 20: 38, 28: 84, 40: 59, 63: 81, 71: 91 };
+    const snakes = { 17: 7, 54: 34, 62: 19, 64: 60, 87: 24, 93: 73, 95: 75, 99: 78 };
+    const sequentialColors = [
+        'rgba(255, 99, 71, 0.7)',   // Red with opacity 0.7
+        'rgba(255, 215, 0, 0.7)',  // Gold with opacity 0.7
+        'rgba(127, 255, 212, 0.7)', // Aquamarine with opacity 0.7
+        'rgba(147, 112, 219, 0.7)', // Medium Purple with opacity 0.7
+        'rgba(0, 206, 209, 0.7)'   // Dark Turquoise with opacity 0.7
+    ];
+    let currentPlayer = 1;
+    let playerPositions = [1, 1]; 
+
+
+    const gameBoard = document.getElementById('game-board');
+
+    for(let row = 10; row > 0; row--){
+        for(let col = 1; col <= 10; col++){
+            const cell = document.createElement('div')
+            // let cellNumber;
+
+            cellNumber = (row % 2 === 0) ? (row -1) * 10 + col :  row * 10 - col + 1
+
+            cell.id = 'cell-' + cellNumber
+            cell.textContent = cellNumber
+
+
+            const colorIndex = (row + col - 1) % sequentialColors.length
+            cell.style.backgroundColor = sequentialColors[colorIndex]
+
+            if(ladders[cellNumber]){
+                cell.classList.add('ladder-start')
+                drawArrow(cell, ladders[cellNumber], 'green')
+            }
+
+            if(Object.values(ladders).includes(cellNumber)) cell.classList.add('ladder-end')
+
+            if(snakes[cellNumber]){
+                cell.classList.add('snake-head')
+                drawArrow(cell, snakes[cellNumber], 'red')
+            }
+
+            if(Object.values(snakes).includes(cellNumber)) cell.classList.add('snake-tail')
+
+            gameBoard.appendChild(cell)
+
+
+                
+        }
+    }
+
+
+    function drawArrow(startCell, endcellNumber, color){
+        const endCell = document.getElementById('cell-'+endcellNumber)
+
+        if(!endCell){
+            console.error(`End cell ${endcellNumber} does not exist.`);
+            return
+        }
+
+        const startCellRect = startCell.getBoundingClientRect()
+        const endCellRect = endCell.getBoundingClientRect()
+
+        const deltaX = endCellRect.left - startCellRect.left
+        const deltaY = endCellRect.top - startCellRect.top
+
+        const length = Math.sqrt(deltaX * deltaX + deltaY * deltaY)
+        const angle = Math.atan2(deltaY, deltaX) * 180 / Math.PI 
+
+        const arrow = document.createElement('div');
+        arrow.classList.add('arrow');
+        arrow.style.width = length + 'px'
+        arrow.style.transform = `rotate(${angle}deg)`
+        arrow.style.borderColor = color
+
+        const arrowContainer = document.createElement('div');
+        arrowContainer.style.position = 'absolute'
+        arrowContainer.style.top = '50%'
+        arrowContainer.style.left = '50%'
+        arrowContainer.style.transform = 'translate(-50%, -50%)'
+        arrowContainer.appendChild(arrow);
+
+        startCell.appendChild(arrowContainer)
+    }
+
+    const player1Piece = document.createElement('div');
+    player1Piece.classList.add('player', 'player1'); 
+    document.getElementById('cell-1').appendChild(player1Piece);
+
+    const player2Piece = document.createElement('div');
+    player2Piece.classList.add('player', 'player2'); 
+    document.getElementById('cell-1').appendChild(player2Piece);
+
+
+    document.getElementById('roll-dice').addEventListener('click', () => {
+        const diceResult = Math.floor(Math.random() * 6) + 1;
+        document.getElementById('dice-result').textContent = 'Dice Rolled : ' + diceResult
+        movePlayer(diceResult)
+    })
+
+
+    function movePlayer(diceResult){
+        let currentPosition = playerPositions[currentPlayer - 1]
+        let newPosition = currentPosition + diceResult
+
+        if(newPosition > 100) newPosition = 100 - (newPosition-100)
+
+        if(ladders[newPosition]){
+            newPosition = ladders[newPosition]
+        }else if(snakes[newPosition]){
+            newPosition = snakes[newPosition]
+        }
+
+        const playerPiece = currentPlayer === 1 ? player1Piece : player2Piece
+
+        const oldCell = document.getElementById('cell-' + currentPosition)
+        const newCell = document.getElementById('cell-' + newPosition)
+
+        playerPositions[currentPlayer - 1] = newPosition
+        animateMove(playerPiece, oldCell, newCell, currentPosition + 1, newPosition)
+
+        if(newPosition === 100){
+            document.getElementById('game-message').textContent = `Player ${currentPlayer} wins!`;
+            document.getElementById('roll-dice').disabled = true;
+        }else{
+            currentPlayer = currentPlayer === 1 ? 2 : 1;
+            document.getElementById('game-message').textContent = `Player ${currentPlayer}'s turn`;
+        }
+    }
+
+    function animateMove(playerPiece, oldCell, newCell, start, end){
+        if(start > end) return
+
+        const currentCell = document.getElementById('cell-' + start)
+        if(!currentCell) return
+
+        const currentRect = currentCell.getBoundingClientRect()
+
+        const nextPosition = start + 1
+
+        const deltaX = currentRect.left - oldCell.getBoundingClientRect().left;
+        const deltaY = currentRect.top - oldCell.getBoundingClientRect().top;
+
+        playerPiece.style.transform = `translate(${deltaX}px, ${deltaY}px)`
+
+        let timeout = 200
+
+        setTimeout(() => {
+            animateMove(playerPiece, oldCell, newCell, nextPosition, end)
+        }, timeout);
+
+        if(start === end){
+            setTimeout(() => {
+                newCell.appendChild(playerPiece)
+                playerPiece.style.transform = ''
+            }, timeout);
+        }
+    }
+
+})

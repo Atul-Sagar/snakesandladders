@@ -190,13 +190,13 @@ p{
     background-color: #f44336 !important;
 }
 
-.arrow{
+/* .arrow{
     position: absolute;
     width: 0;
     height: 0;
     border: 10px solid transparent;
 
-}
+} */
 
 .arrow .up{
     border-bottom-color: black;
@@ -208,4 +208,12 @@ p{
     border-top-color: black;
     border-bottom: none;
     margin-top: 10px;
+}
+
+.arrow{
+    position: absolute;
+    height: 2px;
+    background-color: transparent;
+    border-top: 2px solid;
+    z-index: 1;
 }
